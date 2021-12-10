@@ -1,4 +1,4 @@
-package ece.CPEN502.ReplayMemory;
+package ece.cpen502.ReplayMemory;
 
 import java.util.LinkedList;
 
