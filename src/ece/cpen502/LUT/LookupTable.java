@@ -1,6 +1,7 @@
 package ece.cpen502.LUT;
 
 import ece.cpen502.Interface.LUTInterface;
+import robocode.RobocodeFileOutputStream;
 
 import java.io.*;
 import java.util.Random;
@@ -41,7 +42,34 @@ public class LookupTable implements LUTInterface {
         return 0;
     }
 
-    public void save(File argFile) {}
+    public void save(File argFile) {
+        PrintStream saveLUT = null;
+        try {
+            saveLUT = new PrintStream(new RobocodeFileOutputStream(argFile));
+            for (int i = 0; i < numStates; i++)
+                for (int j = 0; j < numActions; j++)
+                    saveLUT.println(lookupTable[i][j]);
+
+            if (saveLUT.checkError())
+                System.out.println("Could not save the data!");
+            saveLUT.close();
+        }
+        catch (IOException e)
+        {
+            System.out.println("IOException trying to write: " + e);
+        }
+        finally
+        {
+            try {
+                if (saveLUT != null)
+                    saveLUT.close();
+            }
+            catch (Exception e)
+            {
+                System.out.println("Exception trying to close witer: " + e);
+            }
+        }
+    }
 
     public void load(String argFileName) throws IOException {
         FileInputStream inputFile = new FileInputStream(argFileName);
