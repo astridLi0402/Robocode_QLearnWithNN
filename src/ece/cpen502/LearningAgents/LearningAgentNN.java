@@ -49,7 +49,9 @@ public class LearningAgentNN implements CommonInterface {
     public void save(File argFile) {}
 
     @Override
-    public void load(String argFileName) throws IOException {}
+    public void load(String argFileName) throws IOException {
+
+    }
 
     public double outputFor(double[] X) { return 0; }
 }

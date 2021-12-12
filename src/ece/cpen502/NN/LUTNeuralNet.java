@@ -6,21 +6,24 @@ import ece.cpen502.LUT.RobotAction;
 import ece.cpen502.LUT.RobotState;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Random;
 import java.util.Scanner;
 
 public class LUTNeuralNet implements NeuralNetInterface {
 
-    private boolean isBinary; //true = binary training sets used, false = bipolar training sets
-    private double learningRate, momentum;
-    private int numHiddenNeurons;
+    private final boolean isBinary; //true = binary training sets used, false = bipolar training sets
+    private final double learningRate;
+    private final double momentum;
+    private final int numHiddenNeurons;
 
     //hyper-parameters
-    private static double errorThreshold = 0.1;
-    private static int maxSteps = 2000;
-    private static int numInputs = 7; //6 state categories + 1 action
-    private static int numOutputs = 1;
+    private static final double errorThreshold = 0.1;
+    private static final int maxSteps = 2000;
+    private static final int numInputs = 7; //6 state categories + 1 action
+    private static final int numOutputs = 1;
     private static int currentTrainingSet = 0;
 
     //upper and lower bounds for initializing weights
@@ -28,7 +31,7 @@ public class LUTNeuralNet implements NeuralNetInterface {
     private double weightMax = 0.5;
 
     //weights
-    private double[][] inputToHiddenWeights, hiddenToOutputWeights; //+1 to accommodate a bias weight
+    private static double[][] inputToHiddenWeights, hiddenToOutputWeights; //+1 to accommodate a bias weight
     private double[][] deltaWHiddenToOutput, deltaWInputToHidden;
 
     //inputs
@@ -36,9 +39,10 @@ public class LUTNeuralNet implements NeuralNetInterface {
 
     //for save and load
     private boolean areWeightsLoaded = false;
-    private String separator = "break"; //used to separate multiple groups of weights when outputting/reading to/from a file
+    private final String separator = "break"; //used to separate multiple groups of weights when outputting/reading to/from a file
     private String savedOutputPath = "";
     private int saveOncePerNoOfEpochs = 50;
+    public static String fileNameSaved = "";
 
     LUTNeuralNet(double[][] input, double[][] output,
                  double lrnRate, double inputMomentum,
@@ -259,8 +263,7 @@ public class LUTNeuralNet implements NeuralNetInterface {
         catch(IOException e){
             System.out.println("Cannot save the weight table.");
         }
-
-    };
+    }
 
     @Override
     public void load(String argFileName){
@@ -297,14 +300,13 @@ public class LUTNeuralNet implements NeuralNetInterface {
                     break;
                 }
             }
-
             areWeightsLoaded = true;
             reader.close();
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
-    };
+    }
 
     public static double[] normalizeStatesInputs(int[] statesInputs, double lowerBound, double upperBound) {
         double[] normalizedStates = new double[6];
@@ -358,16 +360,16 @@ public class LUTNeuralNet implements NeuralNetInterface {
 
     public static double findMax(double[] Array) {
         double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < Array.length; i++) {
-                max = Math.max(Array[i], max);
+        for (double v : Array) {
+            max = Math.max(v, max);
         }
         return max;
     }
 
     public static double findMin(double[] Array) {
         double min = Double.POSITIVE_INFINITY;
-        for (int i = 0; i < Array.length; i++) {
-            min = Math.min(Array[i], min);
+        for (double v : Array) {
+            min = Math.min(v, min);
         }
         return min;
     }
@@ -388,6 +390,49 @@ public class LUTNeuralNet implements NeuralNetInterface {
     @Override
     public double train(double[] X, double argValue) {
         return 0;
+    }
+
+    public static void fileWriter(double[][] data, String fileType){
+        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+        fileNameSaved = fileType + timeStamp+".txt";
+        try{
+            FileWriter myWriter = new FileWriter(timeStamp+".txt");
+            for (double[] doubles : data) {
+                for (int j = 0; j < data[0].length; j++) {
+                    myWriter.write(Double.toString(doubles[j]) + "\r\n");
+                }
+            }
+            myWriter.close();
+        }catch (Exception e){
+            System.out.println(e);
+        }
+    }
+
+    public static double[][] fileLoader(String fileName, int i1, int i2){
+        double[][] out = new double[i1][i2];
+        try {
+            File myObj = new File(fileName);
+            Scanner myReader = new Scanner(myObj);
+            int i1_temp = 0;
+            int i2_temp = 0;
+            while (myReader.hasNextLine()) {
+                String data = myReader.nextLine();
+                System.out.println(data);
+                if(i2_temp < i2){
+                    out[i1_temp][i2_temp] = Double.parseDouble(data);
+                    i2_temp++;
+                }else{
+                    i1_temp++;
+                    out[i1_temp][0] = Double.parseDouble(data);
+                    i2_temp = 1;
+                }
+            }
+            myReader.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+        return out;
     }
 
     public static void main(String[] args) throws IOException {
@@ -451,6 +496,8 @@ public class LUTNeuralNet implements NeuralNetInterface {
 
         ArrayList lutRMSError = lutTraining.train();
         textWriter("lutRMSError.txt", lutRMSError);
+        fileWriter(inputToHiddenWeights, "inputToHiddenWeights");
+        fileWriter(hiddenToOutputWeights, "hiddenToOutputWeights");
     }
 }
 

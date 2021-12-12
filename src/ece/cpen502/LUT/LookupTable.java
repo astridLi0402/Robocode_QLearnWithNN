@@ -2,7 +2,11 @@ package ece.cpen502.LUT;
 
 import ece.cpen502.Interface.LUTInterface;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Random;
 
 public class LookupTable implements LUTInterface {
@@ -41,7 +45,17 @@ public class LookupTable implements LUTInterface {
         return 0;
     }
 
-    public void save(File argFile) {}
+    public void save(File argFile) {
+        SimpleDateFormat sdf = new SimpleDateFormat("File-ddMMyy-hhmmss.SSS.txt");
+        String fileName = sdf.format(new Date());
+
+        try{
+            ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName));
+            outputStream.writeObject(getLutTable());
+        }catch(Exception e){
+            System.out.println(e);
+        }
+    }
 
     public void load(String argFileName) throws IOException {}
 

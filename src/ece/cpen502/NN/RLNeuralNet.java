@@ -11,13 +11,14 @@ import java.util.Scanner;
 
 public class RLNeuralNet implements NeuralNetInterface {
 
-    private boolean isBinary; //true = binary training sets used, false = bipolar training sets
-    private double learningRate, momentum;
-    private int numHiddenNeurons;
+    private final boolean isBinary; //true = binary training sets used, false = bipolar training sets
+    private final double learningRate;
+    private final double momentum;
+    private final int numHiddenNeurons;
 
     //hyper-parameters
-    private static int numInputs = 7; //6 state categories + 1 action
-    private static int numOutputs = 1;
+    private static final int numInputs = 7; //6 state categories + 1 action
+    private static final int numOutputs = 1;
 
     //upper and lower bounds for initializing weights
     private double weightMin = -0.5;
@@ -29,7 +30,7 @@ public class RLNeuralNet implements NeuralNetInterface {
 
     //for save and load
     private boolean areWeightsLoaded = false;
-    private String separator = "break"; //used to separate multiple groups of weights when outputting/reading to/from a file
+    private final String separator = "break"; //used to separate multiple groups of weights when outputting/reading to/from a file
     private String savedOutputPath = "";
     private int saveOncePerNoOfEpochs = 50;
 
