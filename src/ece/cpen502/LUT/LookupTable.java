@@ -1,6 +1,9 @@
 package ece.cpen502.LUT;
 
 import ece.cpen502.Interface.LUTInterface;
+import robocode.RobocodeFileOutputStream;
+
+import java.io.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -46,18 +49,59 @@ public class LookupTable implements LUTInterface {
     }
 
     public void save(File argFile) {
-        SimpleDateFormat sdf = new SimpleDateFormat("File-ddMMyy-hhmmss.SSS.txt");
-        String fileName = sdf.format(new Date());
+        PrintStream saveLUT = null;
+        try {
+            saveLUT = new PrintStream(new RobocodeFileOutputStream(argFile));
+            for (int i = 0; i < numStates; i++)
+                for (int j = 0; j < numActions; j++)
+                    saveLUT.println(lookupTable[i][j]);
 
-        try{
-            ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName));
-            outputStream.writeObject(getLutTable());
-        }catch(Exception e){
-            System.out.println(e);
+            if (saveLUT.checkError())
+                System.out.println("Could not save the data!");
+            saveLUT.close();
+        }
+        catch (IOException e)
+        {
+            System.out.println("IOException trying to write: " + e);
+        }
+        finally
+        {
+            try {
+                if (saveLUT != null)
+                    saveLUT.close();
+            }
+            catch (Exception e)
+            {
+                System.out.println("Exception trying to close witer: " + e);
+            }
         }
     }
 
-    public void load(String argFileName) throws IOException {}
+    public void load(String argFileName) throws IOException {
+        FileInputStream inputFile = new FileInputStream(argFileName);
+        BufferedReader inputReader = null;
+
+        try   {
+            inputReader = new BufferedReader(new InputStreamReader(inputFile));
+            for (int i = 0; i < RobotState.statesCount; i++)
+                for (int j = 0; j < RobotAction.actionsCount; j++)
+                    lookupTable[i][j] = Double.parseDouble(inputReader.readLine());
+        }
+        catch (IOException e)   {
+            System.out.println("IOException trying to open reader: " + e);
+        }
+        catch (NumberFormatException e)   {
+        }
+        finally {
+            try {
+                if (inputReader != null)
+                    inputReader.close();
+            }
+            catch (IOException e) {
+                System.out.println("IOException trying to close reader: " + e);
+            }
+        }
+    }
 
     @Override
     public void initialiseLUT() {

@@ -223,6 +223,7 @@ public class MyRobot extends AdvancedRobot {
         totalNumRounds++;
         if (totalNumRounds % 1000 == 0) epsilon = epsilon > 0.05 ? epsilon - 0.05 : 0;
         System.out.println("total: " + totalNumRounds + ", epsilon:" + epsilon);
+        saveLUTData();
     }
 
     @Override
@@ -243,5 +244,16 @@ public class MyRobot extends AdvancedRobot {
         File folderDst2 = getDataFile(fileToSaveName);
         Log logFile = new Log();
         logFile.writeToFile(folderDst2, winRate, roundCount);
+    }
+
+    public void saveLUTData() {
+        try
+        {
+            lut.save(getDataFile("LUT"));
+        }
+        catch (Exception e)
+        {
+            out.println("Exception trying to write: " + e);
+        }
     }
 }
