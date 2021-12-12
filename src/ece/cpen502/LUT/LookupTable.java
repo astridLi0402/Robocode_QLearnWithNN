@@ -1,8 +1,8 @@
 package ece.cpen502.LUT;
 
 import ece.cpen502.Interface.LUTInterface;
-import java.io.File;
-import java.io.IOException;
+
+import java.io.*;
 import java.util.Random;
 
 public class LookupTable implements LUTInterface {
@@ -43,7 +43,31 @@ public class LookupTable implements LUTInterface {
 
     public void save(File argFile) {}
 
-    public void load(String argFileName) throws IOException {}
+    public void load(String argFileName) throws IOException {
+        FileInputStream inputFile = new FileInputStream(argFileName);
+        BufferedReader inputReader = null;
+
+        try   {
+            inputReader = new BufferedReader(new InputStreamReader(inputFile));
+            for (int i = 0; i < RobotState.statesCount; i++)
+                for (int j = 0; j < RobotAction.actionsCount; j++)
+                    lookupTable[i][j] = Double.parseDouble(inputReader.readLine());
+        }
+        catch (IOException e)   {
+            System.out.println("IOException trying to open reader: " + e);
+        }
+        catch (NumberFormatException e)   {
+        }
+        finally {
+            try {
+                if (inputReader != null)
+                    inputReader.close();
+            }
+            catch (IOException e) {
+                System.out.println("IOException trying to close reader: " + e);
+            }
+        }
+    }
 
     @Override
     public void initialiseLUT() {
