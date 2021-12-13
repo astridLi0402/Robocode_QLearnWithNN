@@ -5,6 +5,7 @@ import ece.cpen502.LUT.Log;
 import ece.cpen502.LUT.RobotAction;
 import ece.cpen502.LUT.RobotState;
 import ece.cpen502.LearningAgents.LearningAgentNN;
+import ece.cpen502.NN.RLNeuralNet;
 import robocode.*;
 
 import java.awt.*;
@@ -15,11 +16,6 @@ import java.util.Scanner;
 public class NNRobot extends AdvancedRobot {
     private final String fileToSaveName = "robotMiddleReward";
     private final String fileTerminalReward = "robotTerminalReward";
-
-    private static final int numInputs = 7; //6 state categories + 1 action
-    private static final int numOutputs = 1;
-    private static final int numHiddenNeurons = 15;
-
     // --------- game rounds record
     private static int totalNumRounds = 1;
     private static double numRoundsTo100 = 1;
@@ -62,12 +58,10 @@ public class NNRobot extends AdvancedRobot {
         enemyTank = new EnemyRobot();
         RobotState.initialEnergy = this.getEnergy();
         // -------------------------------- Initialize reinforcement learning parts ------------------------------------
-
-        double[][] currentInputToHiddenW = LearningAgentNN.nn.getInputToHiddenWeights();
         if(!LearningAgentNN.nn.areWeightsLoaded && loadPrevTrainedWeights){
-            double[][] weights_1 = fileLoader("inputToHiddenWeights", 8, 16);
+            double[][] weights_1 = fileLoader("inputToHiddenWeights", RLNeuralNet.numInputs + 1, LearningAgentNN.noOfHiddenNeurons+1);
             LearningAgentNN.nn.setInputToHiddenWeights(weights_1);
-            double[][] weights_2 = fileLoader("hiddenToOutputWeights", 16, 1);
+            double[][] weights_2 = fileLoader("hiddenToOutputWeights", LearningAgentNN.noOfHiddenNeurons + 1, RLNeuralNet.numOutputs);
             LearningAgentNN.nn.setHiddenToOutputWeights(weights_2);
             LearningAgentNN.nn.areWeightsLoaded = true;
         }

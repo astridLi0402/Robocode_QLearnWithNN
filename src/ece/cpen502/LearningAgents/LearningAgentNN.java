@@ -11,17 +11,15 @@ import java.io.IOException;
 public class LearningAgentNN implements CommonInterface {
     public enum Algo{QLearn, Sarsa};
 
-    private static double learningRate = 0.2;
-    static int noOfHiddenNeurons = 15;
+    private static final double learningRate = 0.2;
+    public static int noOfHiddenNeurons = 15;
     static double  momentum = 0.3;
-    private double discountFactor = 0.9;
+    private double  discountFactor = 0.9;
     private double[]prevState = new double[6];
     private int prevAction = -1;
     private double[][] inputToHiddenWeights, hiddenToOutputWeights; //+1 to accommodate a bias weight
-    public static RLNeuralNet nn = new RLNeuralNet(learningRate, momentum, noOfHiddenNeurons, false, null, "LUTNN_Weights.txt");
+    public static RLNeuralNet nn = new RLNeuralNet(learningRate, momentum, noOfHiddenNeurons, false, null);
 
-
-//    RLNeuralNet nn = new RLNeuralNet(learningRate, momentum, noOfHiddenNeurons, false, null, "LUTNN_Weights.txt", inputToHiddenWeights, hiddenToOutputWeights);
     @Override
     public double train(double [] X, double argValue) { return 0; };
 

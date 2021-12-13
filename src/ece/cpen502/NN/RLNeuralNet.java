@@ -17,8 +17,8 @@ public class RLNeuralNet implements NeuralNetInterface {
     private final int numHiddenNeurons;
 
     //hyper-parameters
-    private static final int numInputs = 7; //6 state categories + 1 action
-    private static final int numOutputs = 1;
+    public static final int numInputs = 7; //6 state categories + 1 action
+    public static final int numOutputs = 1;
 
     //upper and lower bounds for initializing weights
     private double weightMin = -0.5;
@@ -37,7 +37,7 @@ public class RLNeuralNet implements NeuralNetInterface {
 // double[][] a, double[][] b
     public RLNeuralNet(double lrnRate, double inputMomentum,
                        int noOfHiddenNeurons, boolean isBinaryTraining,
-                       String progressOutputPath, String weightsFile) {
+                       String progressOutputPath) {
         learningRate = lrnRate;
         momentum = inputMomentum;
         numHiddenNeurons = noOfHiddenNeurons;
