@@ -5,19 +5,18 @@ import ece.cpen502.LUT.RobotAction;
 import ece.cpen502.LUT.RobotState;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 public class RLNeuralNet implements NeuralNetInterface {
 
-    private boolean isBinary; //true = binary training sets used, false = bipolar training sets
-    private double learningRate, momentum;
-    private int numHiddenNeurons;
+    private final boolean isBinary; //true = binary training sets used, false = bipolar training sets
+    private final double learningRate;
+    private final double momentum;
+    private final int numHiddenNeurons;
 
     //hyper-parameters
-    private static int numInputs = 7; //6 state categories + 1 action
-    private static int numOutputs = 1;
+    public static final int numInputs = 7; //6 state categories + 1 action
+    public static final int numOutputs = 1;
 
     //upper and lower bounds for initializing weights
     private double weightMin = -0.5;
@@ -29,14 +28,13 @@ public class RLNeuralNet implements NeuralNetInterface {
     int bias = 1;
 
     //for save and load
-    private boolean areWeightsLoaded = false;
-    private String separator = "break"; //used to separate multiple groups of weights when outputting/reading to/from a file
+    public boolean areWeightsLoaded = false;
+    private final String separator = "break"; //used to separate multiple groups of weights when outputting/reading to/from a file
     private String savedOutputPath = "";
     private int saveOncePerNoOfEpochs = 50;
-
     public RLNeuralNet(double lrnRate, double inputMomentum,
                        int noOfHiddenNeurons, boolean isBinaryTraining,
-                       String progressOutputPath, String weightsFile) {
+                       String progressOutputPath) {
         learningRate = lrnRate;
         momentum = inputMomentum;
         numHiddenNeurons = noOfHiddenNeurons;
@@ -48,11 +46,21 @@ public class RLNeuralNet implements NeuralNetInterface {
 
         deltaWHiddenToOutput = new double[numHiddenNeurons + 1][numOutputs];
         deltaWInputToHidden = new double[numInputs + 1][numHiddenNeurons + 1];
+    }
 
-//        if (weightsFile != null) {
-//            load(weightsFile);
-//            areWeightsLoaded = true;
-//        }
+    public double[][] getInputToHiddenWeights(){
+        return this.inputToHiddenWeights;
+    }
+    public void setInputToHiddenWeights(double[][] weights){
+        this.inputToHiddenWeights = weights;
+    }
+
+    //    public double[][] getHiddenToOutputWeights(){
+//        return this.hiddenToOutputWeights;
+//    }
+
+    public void setHiddenToOutputWeights(double[][] weights){
+        this.hiddenToOutputWeights = weights;
     }
 
     //Initialize weights to random values in the range [weightMin, weightMax]
@@ -86,7 +94,6 @@ public class RLNeuralNet implements NeuralNetInterface {
     public double[] forwardToHidden(double[][] inputVectors, int actionID) {
         double[] outputsHidden = new double[numHiddenNeurons + 1];
         outputsHidden[0] = bias;
-
         //outputs from the hidden neurons
         for (int i = 1; i < outputsHidden.length; i++) {
             outputsHidden[i] = 0;
@@ -101,6 +108,7 @@ public class RLNeuralNet implements NeuralNetInterface {
     public double[] forwardToOutput(double[] outputsHidden) {
         double[] outputs = new double[numOutputs];
         //outputs from the output neuron
+        // outputs.length = 1 since we only have one output
         for (int i = 0; i < outputs.length; i++) {
             outputs[i] = 0;
             for (int j = 0; j < hiddenToOutputWeights.length; j++) {
@@ -162,15 +170,13 @@ public class RLNeuralNet implements NeuralNetInterface {
                 inputToHiddenWeights[i][j] += deltaWInputToHidden[i][j];
             }
         }
-
     }
 
     /**
      * Given a state, returns the q values for all 6 state action pairs
      */
-    public double[] forwardProp(double[]state) {
+    public double[] forwardProp(double[] state) {
         double[] outputs = new double[RobotAction.actionsCount];
-
         double[][] inputs = adjustInputs(state);
 
         if (!areWeightsLoaded) {
@@ -207,7 +213,6 @@ public class RLNeuralNet implements NeuralNetInterface {
         return optimalAction;
     }
 
-
     @Override
     public void save(File argFile) {
         PrintStream saveFile = null;
@@ -242,7 +247,6 @@ public class RLNeuralNet implements NeuralNetInterface {
     public void load(String argFileName){
         try {
             File myFile = new File(argFileName);
-
             Scanner reader = new Scanner(myFile);
 
             int i = 0;
@@ -372,18 +376,18 @@ public class RLNeuralNet implements NeuralNetInterface {
         return result;
     }
 
-    public static double findMax(double[] Array) {
+    public static double findMax(double[] arr) {
         double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < Array.length; i++) {
-            max = Math.max(Array[i], max);
+        for (double v : arr) {
+            max = Math.max(v, max);
         }
         return max;
     }
 
-    public static double findMin(double[] Array) {
+    public static double findMin(double[] arr) {
         double min = Double.POSITIVE_INFINITY;
-        for (int i = 0; i < Array.length; i++) {
-            min = Math.min(Array[i], min);
+        for (double v : arr) {
+            min = Math.min(v, min);
         }
         return min;
     }
@@ -397,12 +401,12 @@ public class RLNeuralNet implements NeuralNetInterface {
     }
 
     @Override
-    public double outputFor(double[] X) {
+    public double outputFor(double[] x) {
         return 0;
     }
 
     @Override
-    public double train(double[] X, double argValue) {
+    public double train(double[] x, double argValue) {
         return 0;
     }
 }

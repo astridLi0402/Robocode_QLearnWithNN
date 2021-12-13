@@ -1,24 +1,28 @@
 package ece.cpen502.Robots;
-
 import ece.cpen502.LUT.EnemyRobot;
 import ece.cpen502.LUT.Log;
 import ece.cpen502.LUT.RobotAction;
 import ece.cpen502.LUT.RobotState;
 import ece.cpen502.LearningAgents.LearningAgentNN;
+import ece.cpen502.NN.RLNeuralNet;
+import ece.cpen502.ReplayMemory.*;
 import robocode.*;
 
 import java.awt.*;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
 public class NNRobot extends AdvancedRobot {
     private final String fileToSaveName = "robotMiddleReward";
     private final String fileTerminalReward = "robotTerminalReward";
     // --------- game rounds record
-    private static int totalNumRounds = 0;
-    private static double numRoundsTo100 = 0;
+    private static int totalNumRounds = 1;
+    private static double numRoundsTo100 = 1;
     private static double numWins = 0;
-    private static int roundCount = 1;
-    private static double epsilon = 0.1;
+    private static int countOf100Round = 0;
+    private static double epsilon = 0.5;
+
     // --------- state record
     private int actionTaken;
     private double[] state;
@@ -30,7 +34,7 @@ public class NNRobot extends AdvancedRobot {
     private int hasHitWall = 0;
     private int isHitByBullet = 0;
     // ---------- program components
-    private static LearningAgentNN agent = new LearningAgentNN();;
+    private static LearningAgentNN agent = new LearningAgentNN();
     private EnemyRobot enemyTank;
 
     // -------- reward
@@ -42,10 +46,17 @@ public class NNRobot extends AdvancedRobot {
     private final double loseReward = -10;
 
     private double fireMagnitude;
+    private boolean loadPrevTrainedWeights = true;
 
+    private final boolean memoryReplayModeOn = false;
+    private double[] stateT;
+    private int actionT;
+    private final int memorySize = 10;
+    private final int miniSetSize = 5;
+    private int count = this.memorySize + 1;
+    private ReplayMemory<Object> memory = new ReplayMemory<Object>(memorySize);
 
     public void run() {
-
         // -------------------------------- Initialize robot tank parts ------------------------------------------------
         setBulletColor(Color.red);
         setGunColor(Color.green);
@@ -57,22 +68,61 @@ public class NNRobot extends AdvancedRobot {
         RobotState.initialEnergy = this.getEnergy();
         // -------------------------------- Initialize reinforcement learning parts ------------------------------------
 //        agent = new LearningAgentNN();
+        if(!LearningAgentNN.nn.areWeightsLoaded && loadPrevTrainedWeights){
+            double[][] weights_1 = fileLoader("inputToHiddenWeights", RLNeuralNet.numInputs + 1, LearningAgentNN.noOfHiddenNeurons+1);
+            LearningAgentNN.nn.setInputToHiddenWeights(weights_1);
+            double[][] weights_2 = fileLoader("hiddenToOutputWeights", LearningAgentNN.noOfHiddenNeurons + 1, RLNeuralNet.numOutputs);
+            LearningAgentNN.nn.setHiddenToOutputWeights(weights_2);
+            LearningAgentNN.nn.areWeightsLoaded = true;
+        }
         // ------------------------------------------------ Run --------------------------------------------------------
         while (true) {
-            selectRobotAction();
-            actionsCount++;
-            qConvergence += agent.train(state, actionTaken, currentReward, currentAlgo);
+            if(memoryReplayModeOn){
+                // save n times?
+                // while(){
+                // agent.train(state, actionTaken, currentReward, currentAlgo);
+                // }
+                if(memory.sizeOf() < miniSetSize){
+                    addInMemory();
+                    count --;
+                }else{
+                    Object[] sample = memory.sample(miniSetSize);
+                    int a = 2;
+                    for (Object o: sample) {
+                        Experience curE = (Experience) o;
+                        agent.train(curE.getState_t(), curE.getAction_t(), curE.getReward_t(), currentAlgo);
+                    }
+                    addInMemory();
+                    count = 5;
+                }
+            }else{
+                double[] stateBeforeAction = getRobotState();
+                selectRobotAction(stateBeforeAction);
+                actionsCount++;
+                qConvergence += agent.train(state, actionTaken, currentReward, currentAlgo);
+            }
             this.currentReward = 0;
             adjustAndFire();
         }
     }
-
+// memory replay
+    private void addInMemory(){
+        if(stateT == null){
+            stateT = getRobotState();
+            actionT = selectRobotAction(stateT);
+        }else{
+            double[] state_t1 = getRobotState();
+            Experience et = new Experience(stateT, actionT, currentReward, state_t1);
+            stateT = getRobotState();
+            actionT = selectRobotAction(stateT);
+            memory.add(et);
+        }
+    }
     /**
      * selectRobotAction: select robot action based on robot current state
      */
-    private void selectRobotAction(){
-        double[] stateBeforeAction = getRobotState();
-        actionTaken = agent.getAction(stateBeforeAction, epsilon);
+    private int selectRobotAction(double[] state){
+        actionTaken = agent.getAction(state, epsilon);
         this.resetState(); // reset hitWall hitByBullet
         switch(actionTaken){
             case RobotAction.moveForward:
@@ -104,6 +154,7 @@ public class NNRobot extends AdvancedRobot {
                 execute();
                 break;
         }
+        return actionTaken;
     }
 
     private void adjustAndFire() {
@@ -230,9 +281,9 @@ public class NNRobot extends AdvancedRobot {
         if (numRoundsTo100 < 100) {
             numRoundsTo100++;
         } else {
-            logOneRound();
-            logQConvergence();
-            roundCount ++;
+            countOf100Round ++;
+            log100Round();
+            logQConvergence();;
             System.out.println("\n\n !!!!!!!!! " +"win percentage"+ " " + ((numWins / numRoundsTo100) * 100) + "\n\n");
             numRoundsTo100 = 0;
             numWins = 0;
@@ -243,7 +294,6 @@ public class NNRobot extends AdvancedRobot {
         totalNumRounds++;
         if (totalNumRounds % 1000 == 0) epsilon = epsilon > 0.05 ? epsilon - 0.05 : 0;
         System.out.println("total: " + totalNumRounds + ", epsilon:" + epsilon);
-
     }
 
 
@@ -264,13 +314,46 @@ public class NNRobot extends AdvancedRobot {
         double avgQConvergence = qConvergence / actionsCount * 100;
         File qConvergence = getDataFile("qConvergence");
         Log logFile = new Log();
-        logFile.writeToFile(qConvergence, avgQConvergence, roundCount);
+        logFile.writeToFile(qConvergence, avgQConvergence, countOf100Round);
 
     }
-    private void logOneRound(){
+
+    private void log100Round(){
         double winRate = (numWins/numRoundsTo100) * 100;
         File folderDst2 = getDataFile(fileToSaveName);
         Log logFile = new Log();
-        logFile.writeToFile(folderDst2, winRate, roundCount);
+        logFile.writeToFile(folderDst2, winRate, countOf100Round);
+    }
+
+    @Override
+    public File getDataFile(String filename) {
+        return super.getDataFile(filename);
+    }
+
+    public double[][] fileLoader(String fileName, int i1, int i2){
+        double[][] out = new double[i1][i2];
+        try {
+            File myObj = getDataFile(fileName);
+            Scanner myReader = new Scanner(myObj);
+
+            int i1_temp = 0;
+            int i2_temp = 0;
+            while (myReader.hasNextLine()) {
+                String data = myReader.nextLine();
+                if(i2_temp < i2){
+                    out[i1_temp][i2_temp] = Double.parseDouble(data);
+                    i2_temp++;
+                }else{
+                    i1_temp++;
+                    out[i1_temp][0] = Double.parseDouble(data);
+                    i2_temp = 1;
+                }
+            }
+            myReader.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+        return out;
     }
 }
