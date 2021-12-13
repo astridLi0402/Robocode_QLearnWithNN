@@ -281,7 +281,7 @@ public class NNRobot extends AdvancedRobot {
         if (numRoundsTo100 < 100) {
             numRoundsTo100++;
         } else {
-            countOf100Round ++
+            countOf100Round ++;
             log100Round();
             logQConvergence();;
             System.out.println("\n\n !!!!!!!!! " +"win percentage"+ " " + ((numWins / numRoundsTo100) * 100) + "\n\n");
