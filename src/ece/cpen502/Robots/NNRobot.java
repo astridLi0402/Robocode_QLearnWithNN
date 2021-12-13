@@ -9,16 +9,24 @@ import robocode.*;
 
 import java.awt.*;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
 public class NNRobot extends AdvancedRobot {
     private final String fileToSaveName = "robotMiddleReward";
     private final String fileTerminalReward = "robotTerminalReward";
+
+    private static final int numInputs = 7; //6 state categories + 1 action
+    private static final int numOutputs = 1;
+    private static final int numHiddenNeurons = 15;
+
     // --------- game rounds record
-    private static int totalNumRounds = 0;
-    private static double numRoundsTo100 = 0;
+    private static int totalNumRounds = 1;
+    private static double numRoundsTo100 = 1;
     private static double numWins = 0;
-    private static int roundCount = 1;
+    private static int countOf100Round = 0;
     private static double epsilon = 0.1;
+
     // --------- state record
     private int actionTaken;
     private double[] state;
@@ -27,7 +35,7 @@ public class NNRobot extends AdvancedRobot {
     private int hasHitWall = 0;
     private int isHitByBullet = 0;
     // ---------- program components
-    private LearningAgentNN agent;
+    private static LearningAgentNN agent =  new LearningAgentNN();
     private EnemyRobot enemyTank;
 
     // -------- reward
@@ -39,6 +47,7 @@ public class NNRobot extends AdvancedRobot {
     private final double loseReward = -10;
 
     private double fireMagnitude;
+    private boolean loadPrevTrainedWeights = true;
 
 
     public void run() {
@@ -53,16 +62,29 @@ public class NNRobot extends AdvancedRobot {
         enemyTank = new EnemyRobot();
         RobotState.initialEnergy = this.getEnergy();
         // -------------------------------- Initialize reinforcement learning parts ------------------------------------
-        agent = new LearningAgentNN();
+
+        double[][] currentInputToHiddenW = LearningAgentNN.nn.getInputToHiddenWeights();
+        if(!LearningAgentNN.nn.areWeightsLoaded && loadPrevTrainedWeights){
+            double[][] weights_1 = fileLoader("inputToHiddenWeights", 8, 16);
+            LearningAgentNN.nn.setInputToHiddenWeights(weights_1);
+            double[][] weights_2 = fileLoader("hiddenToOutputWeights", 16, 1);
+            LearningAgentNN.nn.setHiddenToOutputWeights(weights_2);
+            LearningAgentNN.nn.areWeightsLoaded = true;
+        }
+
         // ------------------------------------------------ Run --------------------------------------------------------
         while (true) {
             selectRobotAction();
+            // save n times?
+            // while(){
+            // agent.train(state, actionTaken, currentReward, currentAlgo);
+            // }
             agent.train(state, actionTaken, currentReward, currentAlgo);
             this.currentReward = 0;
             adjustAndFire();
         }
     }
-
+// memory replay
     /**
      * selectRobotAction: select robot action based on robot current state
      */
@@ -101,6 +123,7 @@ public class NNRobot extends AdvancedRobot {
                 break;
         }
     }
+
 
     private void adjustAndFire() {
         fireMagnitude = 800 / enemyTank.distance;
@@ -226,8 +249,8 @@ public class NNRobot extends AdvancedRobot {
         if (numRoundsTo100 < 100) {
             numRoundsTo100++;
         } else {
-            logOneRound();
-            roundCount ++;
+            log100Round();
+            countOf100Round ++;
             System.out.println("\n\n !!!!!!!!! " +"win percentage"+ " " + ((numWins / numRoundsTo100) * 100) + "\n\n");
             numRoundsTo100 = 0;
             numWins = 0;
@@ -251,13 +274,42 @@ public class NNRobot extends AdvancedRobot {
         agent.train(state, actionTaken, currentReward, currentAlgo);
     }
 
-    private void logOneRound(){
+    private void log100Round(){
         double winRate = (numWins/numRoundsTo100) * 100;
         File folderDst2 = getDataFile(fileToSaveName);
         Log logFile = new Log();
-        logFile.writeToFile(folderDst2, winRate, roundCount);
+        logFile.writeToFile(folderDst2, winRate, countOf100Round);
     }
 
+    @Override
+    public File getDataFile(String filename) {
+        return super.getDataFile(filename);
+    }
 
+    public double[][] fileLoader(String fileName, int i1, int i2){
+        double[][] out = new double[i1][i2];
+        try {
+            File myObj = getDataFile(fileName);
+            Scanner myReader = new Scanner(myObj);
 
+            int i1_temp = 0;
+            int i2_temp = 0;
+            while (myReader.hasNextLine()) {
+                String data = myReader.nextLine();
+                if(i2_temp < i2){
+                    out[i1_temp][i2_temp] = Double.parseDouble(data);
+                    i2_temp++;
+                }else{
+                    i1_temp++;
+                    out[i1_temp][0] = Double.parseDouble(data);
+                    i2_temp = 1;
+                }
+            }
+            myReader.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+        return out;
+    }
 }

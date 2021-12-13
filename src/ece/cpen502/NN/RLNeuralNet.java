@@ -26,14 +26,15 @@ public class RLNeuralNet implements NeuralNetInterface {
 
     //weights
     private double[][] inputToHiddenWeights, hiddenToOutputWeights; //+1 to accommodate a bias weight
+
     private double[][] deltaWHiddenToOutput, deltaWInputToHidden;
 
     //for save and load
-    private boolean areWeightsLoaded = false;
+    public boolean areWeightsLoaded = false;
     private final String separator = "break"; //used to separate multiple groups of weights when outputting/reading to/from a file
     private String savedOutputPath = "";
     private int saveOncePerNoOfEpochs = 50;
-
+// double[][] a, double[][] b
     public RLNeuralNet(double lrnRate, double inputMomentum,
                        int noOfHiddenNeurons, boolean isBinaryTraining,
                        String progressOutputPath, String weightsFile) {
@@ -48,11 +49,27 @@ public class RLNeuralNet implements NeuralNetInterface {
 
         deltaWHiddenToOutput = new double[numHiddenNeurons + 1][numOutputs];
         deltaWInputToHidden = new double[numInputs + 1][numHiddenNeurons + 1];
-
 //        if (weightsFile != null) {
 //            load(weightsFile);
 //            areWeightsLoaded = true;
 //        }
+//        inputToHiddenWeights = a;
+//        hiddenToOutputWeights = b;
+    }
+
+    public double[][] getInputToHiddenWeights(){
+        return this.inputToHiddenWeights;
+    }
+    public void setInputToHiddenWeights(double[][] weights){
+        this.inputToHiddenWeights = weights;
+    }
+
+//    public double[][] getHiddenToOutputWeights(){
+//        return this.hiddenToOutputWeights;
+//    }
+
+    public void setHiddenToOutputWeights(double[][] weights){
+        this.hiddenToOutputWeights = weights;
     }
 
     //Initialize weights to random values in the range [weightMin, weightMax]
@@ -112,7 +129,6 @@ public class RLNeuralNet implements NeuralNetInterface {
     }
 
     public void backPropagation(double[] state, int action, double Q) {
-
         double[] outputErrorSignals = new double[numOutputs];
         double[] hiddenErrorSignals = new double[numHiddenNeurons + 1];
 
@@ -169,7 +185,6 @@ public class RLNeuralNet implements NeuralNetInterface {
      */
     public double[] forwardProp(double[]state) {
         double[] outputs = new double[RobotAction.actionsCount];
-
         double[][] inputs = adjustInputs(state);
 
         if (!areWeightsLoaded) {

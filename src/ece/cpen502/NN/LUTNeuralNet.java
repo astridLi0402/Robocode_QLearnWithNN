@@ -394,9 +394,8 @@ public class LUTNeuralNet implements NeuralNetInterface {
 
     public static void fileWriter(double[][] data, String fileType){
         String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-        fileNameSaved = fileType + timeStamp+".txt";
         try{
-            FileWriter myWriter = new FileWriter(timeStamp+".txt");
+            FileWriter myWriter = new FileWriter(fileType+".txt");
             for (double[] doubles : data) {
                 for (int j = 0; j < data[0].length; j++) {
                     myWriter.write(Double.toString(doubles[j]) + "\r\n");
@@ -406,33 +405,6 @@ public class LUTNeuralNet implements NeuralNetInterface {
         }catch (Exception e){
             System.out.println(e);
         }
-    }
-
-    public static double[][] fileLoader(String fileName, int i1, int i2){
-        double[][] out = new double[i1][i2];
-        try {
-            File myObj = new File(fileName);
-            Scanner myReader = new Scanner(myObj);
-            int i1_temp = 0;
-            int i2_temp = 0;
-            while (myReader.hasNextLine()) {
-                String data = myReader.nextLine();
-                System.out.println(data);
-                if(i2_temp < i2){
-                    out[i1_temp][i2_temp] = Double.parseDouble(data);
-                    i2_temp++;
-                }else{
-                    i1_temp++;
-                    out[i1_temp][0] = Double.parseDouble(data);
-                    i2_temp = 1;
-                }
-            }
-            myReader.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }
-        return out;
     }
 
     public static void main(String[] args) throws IOException {
