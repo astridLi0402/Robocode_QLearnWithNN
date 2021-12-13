@@ -5,9 +5,7 @@ import ece.cpen502.LUT.RobotAction;
 import ece.cpen502.LUT.RobotState;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 public class RLNeuralNet implements NeuralNetInterface {
 
@@ -49,12 +47,6 @@ public class RLNeuralNet implements NeuralNetInterface {
 
         deltaWHiddenToOutput = new double[numHiddenNeurons + 1][numOutputs];
         deltaWInputToHidden = new double[numInputs + 1][numHiddenNeurons + 1];
-//        if (weightsFile != null) {
-//            load(weightsFile);
-//            areWeightsLoaded = true;
-//        }
-//        inputToHiddenWeights = a;
-//        hiddenToOutputWeights = b;
     }
 
     public double[][] getInputToHiddenWeights(){
@@ -118,6 +110,7 @@ public class RLNeuralNet implements NeuralNetInterface {
     public double[] forwardToOutput(double[] outputsHidden) {
         double[] outputs = new double[numOutputs];
         //outputs from the output neuron
+        // outputs.length = 1 since we only have one output
         for (int i = 0; i < outputs.length; i++) {
             outputs[i] = 0;
             for (int j = 0; j < hiddenToOutputWeights.length; j++) {
@@ -128,12 +121,12 @@ public class RLNeuralNet implements NeuralNetInterface {
         return outputs;
     }
 
-    public void backPropagation(double[] state, int action, double Q) {
+    public void backPropagation(double[] pState, int action, double Q) {
         double[] outputErrorSignals = new double[numOutputs];
         double[] hiddenErrorSignals = new double[numHiddenNeurons + 1];
 
-        double[] outputsHidden = forwardToHidden(adjustInputs(state), action);
-        double[] outputs = forwardProp(state);
+        double[] outputsHidden = forwardToHidden(adjustInputs(pState), action);
+        double[] outputs = forwardProp(pState);
 
         //compute the error signals at the outputs neurons
         if (isBinary) {
@@ -174,7 +167,7 @@ public class RLNeuralNet implements NeuralNetInterface {
         for (int i = 0; i < inputToHiddenWeights.length; i++) {
             for (int j = 0; j < inputToHiddenWeights[i].length; j++) {
                 deltaWInputToHidden[i][j] = momentum * deltaWInputToHidden[i][j]
-                        + learningRate * hiddenErrorSignals[j] * adjustInputs(state)[action][i];
+                        + learningRate * hiddenErrorSignals[j] * adjustInputs(pState)[action][i];
                 inputToHiddenWeights[i][j] += deltaWInputToHidden[i][j];
             }
         }
@@ -183,7 +176,7 @@ public class RLNeuralNet implements NeuralNetInterface {
     /**
      * Given a state, returns the q values for all 6 state action pairs
      */
-    public double[] forwardProp(double[]state) {
+    public double[] forwardProp(double[] state) {
         double[] outputs = new double[RobotAction.actionsCount];
         double[][] inputs = adjustInputs(state);
 
@@ -384,18 +377,18 @@ public class RLNeuralNet implements NeuralNetInterface {
         return result;
     }
 
-    public static double findMax(double[] Array) {
+    public static double findMax(double[] arr) {
         double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < Array.length; i++) {
-            max = Math.max(Array[i], max);
+        for (double v : arr) {
+            max = Math.max(v, max);
         }
         return max;
     }
 
-    public static double findMin(double[] Array) {
+    public static double findMin(double[] arr) {
         double min = Double.POSITIVE_INFINITY;
-        for (int i = 0; i < Array.length; i++) {
-            min = Math.min(Array[i], min);
+        for (double v : arr) {
+            min = Math.min(v, min);
         }
         return min;
     }
@@ -409,12 +402,12 @@ public class RLNeuralNet implements NeuralNetInterface {
     }
 
     @Override
-    public double outputFor(double[] X) {
+    public double outputFor(double[] x) {
         return 0;
     }
 
     @Override
-    public double train(double[] X, double argValue) {
+    public double train(double[] x, double argValue) {
         return 0;
     }
 }

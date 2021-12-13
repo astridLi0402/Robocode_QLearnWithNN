@@ -10,14 +10,12 @@ import java.io.IOException;
 
 public class LearningAgentNN implements CommonInterface {
     public enum Algo{QLearn, Sarsa};
-
     private static final double learningRate = 0.2;
     public static int noOfHiddenNeurons = 15;
     static double  momentum = 0.3;
     private double  discountFactor = 0.9;
     private double[]prevState = new double[6];
     private int prevAction = -1;
-    private double[][] inputToHiddenWeights, hiddenToOutputWeights; //+1 to accommodate a bias weight
     public static RLNeuralNet nn = new RLNeuralNet(learningRate, momentum, noOfHiddenNeurons, false, null);
 
     @Override
@@ -29,10 +27,10 @@ public class LearningAgentNN implements CommonInterface {
             double Q = nn.getQ(prevState,prevAction);
             switch (algo) {
                 case QLearn:
-                    Q += this.learningRate * (reward + this.discountFactor * nn.getMaxQ(curState) - Q);
+                    Q += learningRate * (reward + this.discountFactor * nn.getMaxQ(curState) - Q);
                     break;
                 case Sarsa:
-                    Q += this.learningRate * (reward + this.discountFactor * nn.getQ(curState, curAction) - Q);
+                    Q += learningRate * (reward + this.discountFactor * nn.getQ(curState, curAction) - Q);
                     break;
             }
             nn.backPropagation(prevState,prevAction,Q);
@@ -51,9 +49,7 @@ public class LearningAgentNN implements CommonInterface {
     public void save(File argFile) {}
 
     @Override
-    public void load(String argFileName) throws IOException {
-
-    }
+    public void load(String argFileName) throws IOException {}
 
     public double outputFor(double[] X) { return 0; }
 }

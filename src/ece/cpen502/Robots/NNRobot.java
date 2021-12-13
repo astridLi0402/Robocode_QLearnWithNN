@@ -6,6 +6,7 @@ import ece.cpen502.LUT.RobotAction;
 import ece.cpen502.LUT.RobotState;
 import ece.cpen502.LearningAgents.LearningAgentNN;
 import ece.cpen502.NN.RLNeuralNet;
+import ece.cpen502.ReplayMemory.*;
 import robocode.*;
 
 import java.awt.*;
@@ -21,7 +22,7 @@ public class NNRobot extends AdvancedRobot {
     private static double numRoundsTo100 = 1;
     private static double numWins = 0;
     private static int countOf100Round = 0;
-    private static double epsilon = 0.1;
+    private static double epsilon = 0.5;
 
     // --------- state record
     private int actionTaken;
@@ -45,9 +46,15 @@ public class NNRobot extends AdvancedRobot {
     private double fireMagnitude;
     private boolean loadPrevTrainedWeights = true;
 
+    private final boolean memoryReplayModeOn = true;
+    private double[] stateT;
+    private int actionT;
+    private final int memorySize = 10;
+    private final int miniSetSize = 5;
+    private int count = this.memorySize + 1;
+    private ReplayMemory<Object> memory = new ReplayMemory<Object>(memorySize);
 
     public void run() {
-
         // -------------------------------- Initialize robot tank parts ------------------------------------------------
         setBulletColor(Color.red);
         setGunColor(Color.green);
@@ -65,26 +72,53 @@ public class NNRobot extends AdvancedRobot {
             LearningAgentNN.nn.setHiddenToOutputWeights(weights_2);
             LearningAgentNN.nn.areWeightsLoaded = true;
         }
-
         // ------------------------------------------------ Run --------------------------------------------------------
         while (true) {
-            selectRobotAction();
-            // save n times?
-            // while(){
-            // agent.train(state, actionTaken, currentReward, currentAlgo);
-            // }
-            agent.train(state, actionTaken, currentReward, currentAlgo);
+            if(memoryReplayModeOn){
+                // save n times?
+                // while(){
+                // agent.train(state, actionTaken, currentReward, currentAlgo);
+                // }
+                if(memory.sizeOf() < miniSetSize){
+                    addInMemory();
+                    count --;
+                }else{
+                    Object[] sample = memory.sample(miniSetSize);
+                    int a = 2;
+                    for (Object o: sample) {
+                        Experience curE = (Experience) o;
+                        agent.train(curE.getState_t(), curE.getAction_t(), curE.getReward_t(), currentAlgo);
+                    }
+                    addInMemory();
+                    count = 5;
+                }
+            }else{
+                double[] stateBeforeAction = getRobotState();
+                selectRobotAction(stateBeforeAction);
+                agent.train(state, actionTaken, currentReward, currentAlgo);
+            }
             this.currentReward = 0;
             adjustAndFire();
         }
     }
 // memory replay
+    private void addInMemory(){
+        if(stateT == null){
+            stateT = getRobotState();
+            actionT = selectRobotAction(stateT);
+        }else{
+            double[] state_t1 = getRobotState();
+            Experience et = new Experience(stateT, actionT, currentReward, state_t1);
+            stateT = getRobotState();
+            actionT = selectRobotAction(stateT);
+            memory.add(et);
+        }
+    }
     /**
      * selectRobotAction: select robot action based on robot current state
      */
-    private void selectRobotAction(){
-        double[] stateBeforeAction = getRobotState();
-        actionTaken = agent.getAction(stateBeforeAction, epsilon);
+    private int selectRobotAction(double[] state){
+        actionTaken = agent.getAction(state, epsilon);
         this.resetState(); // reset hitWall hitByBullet
         switch(actionTaken){
             case RobotAction.moveForward:
@@ -116,6 +150,7 @@ public class NNRobot extends AdvancedRobot {
                 execute();
                 break;
         }
+        return actionTaken;
     }
 
 
@@ -243,8 +278,8 @@ public class NNRobot extends AdvancedRobot {
         if (numRoundsTo100 < 100) {
             numRoundsTo100++;
         } else {
-            log100Round();
             countOf100Round ++;
+            log100Round();
             System.out.println("\n\n !!!!!!!!! " +"win percentage"+ " " + ((numWins / numRoundsTo100) * 100) + "\n\n");
             numRoundsTo100 = 0;
             numWins = 0;
