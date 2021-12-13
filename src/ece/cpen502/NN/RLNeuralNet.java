@@ -24,15 +24,14 @@ public class RLNeuralNet implements NeuralNetInterface {
 
     //weights
     private double[][] inputToHiddenWeights, hiddenToOutputWeights; //+1 to accommodate a bias weight
-
     private double[][] deltaWHiddenToOutput, deltaWInputToHidden;
+    int bias = 1;
 
     //for save and load
     public boolean areWeightsLoaded = false;
     private final String separator = "break"; //used to separate multiple groups of weights when outputting/reading to/from a file
     private String savedOutputPath = "";
     private int saveOncePerNoOfEpochs = 50;
-// double[][] a, double[][] b
     public RLNeuralNet(double lrnRate, double inputMomentum,
                        int noOfHiddenNeurons, boolean isBinaryTraining,
                        String progressOutputPath) {
@@ -56,7 +55,7 @@ public class RLNeuralNet implements NeuralNetInterface {
         this.inputToHiddenWeights = weights;
     }
 
-//    public double[][] getHiddenToOutputWeights(){
+    //    public double[][] getHiddenToOutputWeights(){
 //        return this.hiddenToOutputWeights;
 //    }
 
@@ -95,7 +94,6 @@ public class RLNeuralNet implements NeuralNetInterface {
     public double[] forwardToHidden(double[][] inputVectors, int actionID) {
         double[] outputsHidden = new double[numHiddenNeurons + 1];
         outputsHidden[0] = bias;
-
         //outputs from the hidden neurons
         for (int i = 1; i < outputsHidden.length; i++) {
             outputsHidden[i] = 0;
@@ -121,12 +119,13 @@ public class RLNeuralNet implements NeuralNetInterface {
         return outputs;
     }
 
-    public void backPropagation(double[] pState, int action, double Q) {
+    public void backPropagation(double[] state, int action, double Q) {
+
         double[] outputErrorSignals = new double[numOutputs];
         double[] hiddenErrorSignals = new double[numHiddenNeurons + 1];
 
-        double[] outputsHidden = forwardToHidden(adjustInputs(pState), action);
-        double[] outputs = forwardProp(pState);
+        double[] outputsHidden = forwardToHidden(adjustInputs(state), action);
+        double[] outputs = forwardProp(state);
 
         //compute the error signals at the outputs neurons
         if (isBinary) {
@@ -136,8 +135,6 @@ public class RLNeuralNet implements NeuralNetInterface {
             }
         } else {
             for (int i = 0; i < numOutputs; i++) {
-//                outputErrorSignals[i] = (Q - outputs[i]) *
-//                        (1 - outputs[i] * outputs[i]) * 0.5;
                 outputErrorSignals[i] = (Q - outputs[action]) *
                         (1 - outputs[action] * outputs[action]) * 0.5;
             }
@@ -169,7 +166,7 @@ public class RLNeuralNet implements NeuralNetInterface {
         for (int i = 0; i < inputToHiddenWeights.length; i++) {
             for (int j = 0; j < inputToHiddenWeights[i].length; j++) {
                 deltaWInputToHidden[i][j] = momentum * deltaWInputToHidden[i][j]
-                        + learningRate * hiddenErrorSignals[j] * adjustInputs(pState)[action][i];
+                        + learningRate * hiddenErrorSignals[j] * adjustInputs(state)[action][i];
                 inputToHiddenWeights[i][j] += deltaWInputToHidden[i][j];
             }
         }

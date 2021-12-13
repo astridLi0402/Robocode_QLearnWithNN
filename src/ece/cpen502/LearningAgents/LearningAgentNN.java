@@ -17,26 +17,29 @@ public class LearningAgentNN implements CommonInterface {
     private double[]prevState = new double[6];
     private int prevAction = -1;
     public static RLNeuralNet nn = new RLNeuralNet(learningRate, momentum, noOfHiddenNeurons, false, null);
+    private double newQ;
+    private double Q;
 
     @Override
     public double train(double [] X, double argValue) { return 0; };
 
-    public void train(double[] curState, int curAction, double reward, Algo algo) {
+    public double train(double[] curState, int curAction, double reward, Algo algo) {
         if (prevState != null && prevAction != -1) {
             // prev state, prev action -> Q value
-            double Q = nn.getQ(prevState,prevAction);
+            Q = nn.getQ(prevState,prevAction);
             switch (algo) {
                 case QLearn:
-                    Q += learningRate * (reward + this.discountFactor * nn.getMaxQ(curState) - Q);
+                    newQ = Q + learningRate * (reward + this.discountFactor * nn.getMaxQ(curState) - Q);
                     break;
                 case Sarsa:
-                    Q += learningRate * (reward + this.discountFactor * nn.getQ(curState, curAction) - Q);
+                    newQ = Q + learningRate * (reward + this.discountFactor * nn.getQ(curState, curAction) - Q);
                     break;
             }
-            nn.backPropagation(prevState,prevAction,Q);
+            nn.backPropagation(prevState,prevAction,newQ);
         }
         prevState = curState;
         prevAction = curAction;
+        return Math.abs((newQ - Q) / Q);
     }
 
     public int getAction(double[] state, double epsilon){
