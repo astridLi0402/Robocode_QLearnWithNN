@@ -26,6 +26,7 @@ public class RLNeuralNet implements NeuralNetInterface {
     //weights
     private double[][] inputToHiddenWeights, hiddenToOutputWeights; //+1 to accommodate a bias weight
     private double[][] deltaWHiddenToOutput, deltaWInputToHidden;
+    int bias = 1;
 
     //for save and load
     private boolean areWeightsLoaded = false;
@@ -126,8 +127,8 @@ public class RLNeuralNet implements NeuralNetInterface {
             }
         } else {
             for (int i = 0; i < numOutputs; i++) {
-                outputErrorSignals[i] = (Q - outputs[i]) *
-                        (1 - outputs[i] * outputs[i]) * 0.5;
+                outputErrorSignals[i] = (Q - outputs[action]) *
+                        (1 - outputs[action] * outputs[action]) * 0.5;
             }
         }
 
@@ -161,6 +162,7 @@ public class RLNeuralNet implements NeuralNetInterface {
                 inputToHiddenWeights[i][j] += deltaWInputToHidden[i][j];
             }
         }
+
     }
 
     /**
@@ -205,6 +207,7 @@ public class RLNeuralNet implements NeuralNetInterface {
         return optimalAction;
     }
 
+
     @Override
     public void save(File argFile) {
         PrintStream saveFile = null;
@@ -239,6 +242,7 @@ public class RLNeuralNet implements NeuralNetInterface {
     public void load(String argFileName){
         try {
             File myFile = new File(argFileName);
+
             Scanner reader = new Scanner(myFile);
 
             int i = 0;

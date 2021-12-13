@@ -22,10 +22,12 @@ public class LUTNeuralNet implements NeuralNetInterface {
     private static int numInputs = 7; //6 state categories + 1 action
     private static int numOutputs = 1;
     private static int currentTrainingSet = 0;
+    private static int bias = 1;
 
     //upper and lower bounds for initializing weights
     private double weightMin = -0.5;
     private double weightMax = 0.5;
+
 
     //weights
     private double[][] inputToHiddenWeights, hiddenToOutputWeights; //+1 to accommodate a bias weight
@@ -393,7 +395,7 @@ public class LUTNeuralNet implements NeuralNetInterface {
     public static void main(String[] args) throws IOException {
         double learningRate = 0.1;
         int noOfHiddenNeurons = 15;
-        double momentum = 0.3;
+        double momentum = 0.2;
 
         //Get LUT from assignment 2 and normalize to range [-1,1]
         LookupTable lut = new LookupTable();

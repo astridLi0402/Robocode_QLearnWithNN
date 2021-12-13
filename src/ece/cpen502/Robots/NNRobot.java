@@ -22,12 +22,15 @@ public class NNRobot extends AdvancedRobot {
     // --------- state record
     private int actionTaken;
     private double[] state;
+    private double qConvergence = 0;
+    private double actionsCount = 0;
+
     private final LearningAgentNN.Algo currentAlgo = LearningAgentNN.Algo.QLearn;
 
     private int hasHitWall = 0;
     private int isHitByBullet = 0;
     // ---------- program components
-    private LearningAgentNN agent;
+    private static LearningAgentNN agent = new LearningAgentNN();;
     private EnemyRobot enemyTank;
 
     // -------- reward
@@ -53,11 +56,12 @@ public class NNRobot extends AdvancedRobot {
         enemyTank = new EnemyRobot();
         RobotState.initialEnergy = this.getEnergy();
         // -------------------------------- Initialize reinforcement learning parts ------------------------------------
-        agent = new LearningAgentNN();
+//        agent = new LearningAgentNN();
         // ------------------------------------------------ Run --------------------------------------------------------
         while (true) {
             selectRobotAction();
-            agent.train(state, actionTaken, currentReward, currentAlgo);
+            actionsCount++;
+            qConvergence += agent.train(state, actionTaken, currentReward, currentAlgo);
             this.currentReward = 0;
             adjustAndFire();
         }
@@ -227,14 +231,19 @@ public class NNRobot extends AdvancedRobot {
             numRoundsTo100++;
         } else {
             logOneRound();
+            logQConvergence();
             roundCount ++;
             System.out.println("\n\n !!!!!!!!! " +"win percentage"+ " " + ((numWins / numRoundsTo100) * 100) + "\n\n");
             numRoundsTo100 = 0;
             numWins = 0;
+
+            actionsCount = 0;
+            qConvergence = 0;
         }
         totalNumRounds++;
         if (totalNumRounds % 1000 == 0) epsilon = epsilon > 0.05 ? epsilon - 0.05 : 0;
         System.out.println("total: " + totalNumRounds + ", epsilon:" + epsilon);
+
     }
 
 
@@ -251,13 +260,17 @@ public class NNRobot extends AdvancedRobot {
         agent.train(state, actionTaken, currentReward, currentAlgo);
     }
 
+    private void logQConvergence(){
+        double avgQConvergence = qConvergence / actionsCount * 100;
+        File qConvergence = getDataFile("qConvergence");
+        Log logFile = new Log();
+        logFile.writeToFile(qConvergence, avgQConvergence, roundCount);
+
+    }
     private void logOneRound(){
         double winRate = (numWins/numRoundsTo100) * 100;
         File folderDst2 = getDataFile(fileToSaveName);
         Log logFile = new Log();
         logFile.writeToFile(folderDst2, winRate, roundCount);
     }
-
-
-
 }
