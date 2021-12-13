@@ -136,8 +136,10 @@ public class RLNeuralNet implements NeuralNetInterface {
             }
         } else {
             for (int i = 0; i < numOutputs; i++) {
-                outputErrorSignals[i] = (Q - outputs[i]) *
-                        (1 - outputs[i] * outputs[i]) * 0.5;
+//                outputErrorSignals[i] = (Q - outputs[i]) *
+//                        (1 - outputs[i] * outputs[i]) * 0.5;
+                outputErrorSignals[i] = (Q - outputs[action]) *
+                        (1 - outputs[action] * outputs[action]) * 0.5;
             }
         }
 

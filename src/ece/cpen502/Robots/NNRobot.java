@@ -1,5 +1,4 @@
 package ece.cpen502.Robots;
-
 import ece.cpen502.LUT.EnemyRobot;
 import ece.cpen502.LUT.Log;
 import ece.cpen502.LUT.RobotAction;
@@ -46,7 +45,7 @@ public class NNRobot extends AdvancedRobot {
     private double fireMagnitude;
     private boolean loadPrevTrainedWeights = true;
 
-    private final boolean memoryReplayModeOn = true;
+    private final boolean memoryReplayModeOn = false;
     private double[] stateT;
     private int actionT;
     private final int memorySize = 10;
