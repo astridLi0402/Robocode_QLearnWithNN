@@ -1,6 +1,6 @@
 package ece.cpen502.NN;
 
-import ece.cpen502.Interface.NeuralNetInterface;
+import  ece.cpen502.Interface.NeuralNetInterface;
 import ece.cpen502.LUT.LookupTable;
 import ece.cpen502.LUT.RobotAction;
 import ece.cpen502.LUT.RobotState;
