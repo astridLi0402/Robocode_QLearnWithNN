@@ -21,7 +21,7 @@ public class NNRobot extends AdvancedRobot {
     private static double numRoundsTo100 = 1;
     private static double numWins = 0;
     private static int countOf100Round = 0;
-    private static double epsilon = 0.5;
+    private static double epsilon = 0.65;
 
     // --------- state record
     private int actionTaken;
@@ -46,7 +46,7 @@ public class NNRobot extends AdvancedRobot {
     private final double loseReward = -10;
 
     private double fireMagnitude;
-    private boolean loadPrevTrainedWeights = true;
+    private boolean loadPrevTrainedWeights = false;
 
     private final boolean memoryReplayModeOn = false;
     private double[] stateT;

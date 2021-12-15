@@ -21,7 +21,7 @@ public class LUTNeuralNet implements NeuralNetInterface {
 
     //hyper-parameters
     private static final double errorThreshold = 0.1;
-    private static final int maxSteps = 2000;
+    private static final int maxSteps = 3000;
     private static final int numInputs = 7; //6 state categories + 1 action
     private static final int numOutputs = 1;
     private static int currentTrainingSet = 0;
@@ -410,9 +410,9 @@ public class LUTNeuralNet implements NeuralNetInterface {
     }
 
     public static void main(String[] args) throws IOException {
-        double learningRate = 0.1;
-        int noOfHiddenNeurons = 15;
-        double momentum = 0.2;
+        double learningRate = 0.01;
+        int noOfHiddenNeurons = 9;
+        double momentum = 0.8;
 
         //Get LUT from assignment 2 and normalize to range [-1,1]
         LookupTable lut = new LookupTable();
@@ -469,7 +469,7 @@ public class LUTNeuralNet implements NeuralNetInterface {
         LUTNeuralNet lutTraining = new LUTNeuralNet(inputs, expectedOutputsLUT, learningRate, momentum,noOfHiddenNeurons,false, "LUTNN_Weights.txt");
 
         ArrayList lutRMSError = lutTraining.train();
-        textWriter("lutRMSError.txt", lutRMSError);
+        textWriter("HiddenNeuron "+noOfHiddenNeurons+ " learningRate"+ learningRate + " momentum "+momentum+"lutRMSError.txt", lutRMSError);
         fileWriter(inputToHiddenWeights, "inputToHiddenWeights");
         fileWriter(hiddenToOutputWeights, "hiddenToOutputWeights");
     }
