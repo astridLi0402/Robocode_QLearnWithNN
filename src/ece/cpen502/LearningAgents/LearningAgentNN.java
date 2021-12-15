@@ -13,8 +13,8 @@ public class LearningAgentNN implements CommonInterface {
     private static final double learningRate = 0.2;
     public static int noOfHiddenNeurons = 15;
     static double  momentum = 0.3;
-    private double  discountFactor = 0.9;
-    private double[]prevState = new double[6];
+    private double  discountFactor = 0.1;
+    private double[] prevState = new double[6];
     private int prevAction = -1;
     public static RLNeuralNet nn = new RLNeuralNet(learningRate, momentum, noOfHiddenNeurons, false, null);
     private double newQ;
@@ -39,7 +39,7 @@ public class LearningAgentNN implements CommonInterface {
         }
         prevState = curState;
         prevAction = curAction;
-        return Math.abs((newQ - Q) / Q);
+        return Math.pow((newQ - Q), 2);
     }
 
     public int getAction(double[] state, double epsilon){

@@ -21,7 +21,7 @@ public class NNRobot extends AdvancedRobot {
     private static double numRoundsTo100 = 1;
     private static double numWins = 0;
     private static int countOf100Round = 0;
-    private static double epsilon = 0.5;
+    private static double epsilon = 0.1;
 
     // --------- state record
     private int actionTaken;
@@ -40,10 +40,16 @@ public class NNRobot extends AdvancedRobot {
     // -------- reward
     //the reward policy should be killed > bullet hit > hit robot > hit wall > bullet miss > got hit by bullet
     private double currentReward = 0.0;
-    private final double goodInstantReward = 5.0;
-    private final double badInstantReward = -2.0;
-    private final double winReward = 10;
-    private final double loseReward = -10;
+    private final double goodInstantReward = 0.5;
+    private final double badInstantReward = -0.3;
+    private final double winReward = 1;
+    private final double loseReward = -1;
+
+//    private double currentReward = 0.0;
+//    private final double goodInstantReward = 5.0;
+//    private final double badInstantReward = -2.0;
+//    private final double winReward = 10;
+//    private final double loseReward = -10;
 
     private double fireMagnitude;
     private boolean loadPrevTrainedWeights = true;
@@ -52,7 +58,7 @@ public class NNRobot extends AdvancedRobot {
     private double[] stateT;
     private int actionT;
     private final int memorySize = 10;
-    private final int miniSetSize = 5;
+    private final int miniSetSize = 3;
     private int count = this.memorySize + 1;
     private ReplayMemory<Object> memory = new ReplayMemory<Object>(memorySize);
 
@@ -292,7 +298,8 @@ public class NNRobot extends AdvancedRobot {
             qConvergence = 0;
         }
         totalNumRounds++;
-        if (totalNumRounds % 1000 == 0) epsilon = epsilon > 0.05 ? epsilon - 0.05 : 0;
+     if (totalNumRounds % 1000 == 0) epsilon = epsilon > 0.05 ? epsilon - 0.05 : 0;
+
         System.out.println("total: " + totalNumRounds + ", epsilon:" + epsilon);
     }
 
@@ -311,7 +318,9 @@ public class NNRobot extends AdvancedRobot {
     }
 
     private void logQConvergence(){
-        double avgQConvergence = qConvergence / actionsCount * 100;
+      //  double avgQConvergence = qConvergence / actionsCount * 1000
+        double avgQConvergence = Math.sqrt(qConvergence / actionsCount);
+
         File qConvergence = getDataFile("qConvergence");
         Log logFile = new Log();
         logFile.writeToFile(qConvergence, avgQConvergence, countOf100Round);
